@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Наши клиенты">
+    <title>Наши клиенты - Dessert boutique</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <script type="module" src="js/main.js"></script>
+</head>
+
+<body>
+<header>
+    <h1>Dessert boutique</h1>
+    <em class="header__tagline">Сладкие моменты вашей жизни</em>
+</header>
+
+<nav class="main-nav">
+    <ul class="nav">
+        <li><a class="nav__link" href="index.html">Главная</a></li>
+        <li><a class="nav__link" href="about.html">О нас</a></li>
+        <li><a class="nav__link" href="products.html">Каталог</a></li>
+        <li><a class="nav__link" href="history_desserts.html">Истории десертов</a></li>
+        <li><a class="nav__link" href="reviews.html">Отзывы</a></li>
+        <li><a class="nav__link" href="prices.html">Цены</a></li>
+        <li><a class="nav__link" href="contacts.html">Контакты</a></li>
+        <li><a class="nav__link" href="users.html">Наши клиенты</a></li>
+    </ul>
+</nav>
+
+<main>
+    <section id="users">
+        <h2>Наши клиенты</h2>
+
+        <button id="loadUsersBtn" class="btn btn-primary">Загрузить клиентов</button>
+
+        <div id="loader" class="loader" style="display: none;">
+            <div class="loader__spinner"></div>
+            <p>Загрузка клиентов...</p>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <div id="usersContainer" class="users-grid"></div>
+
+        <template id="userTemplate">
+            <div class="user-card">
+                <h3 class="user__name"></h3>
+                <p class="user__username"></p>
+                <p class="user__email"></p>
+                <p class="user__phone"></p>
+                <p class="user__website"></p>
+                <div class="user__address">
+                    <h4>Адрес:</h4>
+                    <p class="user__address-text"></p>
+                </div>
+                <div class="user__company">
+                    <h4>Компания:</h4>
+                    <p class="user__company-name"></p>
+                    <p class="user__company-catchphrase"></p>
+                </div>
+            </div>
+        </template>
+    </section>
+</main>
+
+<footer>
+    <p>© 2026 Dessert boutique. Все права защищены.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Отзывы клиентов Dessert boutique">
+    <title>Отзывы - Dessert boutique</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <script type="module" src="js/main.js"></script>
+</head>
+
+<body>
+<header>
+    <h1>Dessert boutique</h1>
+    <em class="header__tagline">Сладкие моменты вашей жизни</em>
+</header>
+
+<nav class="main-nav">
+    <ul class="nav">
+        <li><a class="nav__link" href="index.html">Главная</a></li>
+        <li><a class="nav__link" href="about.html">О нас</a></li>
+        <li><a class="nav__link" href="products.html">Каталог</a></li>
+        <li><a class="nav__link" href="history_desserts.html">Истории десертов</a></li>
+        <li><a class="nav__link" href="reviews.html">Отзывы</a></li>
+        <li><a class="nav__link" href="prices.html">Цены</a></li>
+        <li><a class="nav__link" href="contacts.html">Контакты</a></li>
+        <li><a class="nav__link" href="users.html">Наши клиенты</a></li>
+    </ul>
+</nav>
+
+<main>
+    <section id="reviews">
+        <h2>Отзывы наших клиентов</h2>
+
+        <section class="review-form-container">
+            <h3>Оставьте ваш отзыв</h3>
+            <form id="reviewForm" class="review-form">
+                <div class="form-group">
+                    <label for="product">Какой десерт заказывали? *</label>
+                    <input type="text" id="product" name="product" required minlength="2" placeholder="Например: Морковный торт, Чизкейк...">
+                </div>
+
+                <div class="form-group">
+                    <label for="author">Ваше имя (необязательно)</label>
+                    <input type="text" id="author" name="author" placeholder="Как к вам обращаться?">
+                </div>
+
+                <div class="form-group">
+                    <label for="rating">Оценка *</label>
+                    <select id="rating" name="rating" required>
+                        <option value="">Выберите оценку</option>
+                        <option value="5">5 — Восхитительно</option>
+                        <option value="4">4 — Очень вкусно</option>
+                        <option value="3">3 — Хорошо</option>
+                        <option value="2">2 — Средне</option>
+                        <option value="1">1 — Не понравилось</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="text">Текст отзыва *</label>
+                    <textarea id="text" name="text" required minlength="10" rows="4" placeholder="Поделитесь впечатлениями..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Добавить отзыв</button>
+                    <button type="reset" class="btn btn-secondary">Очистить</button>
+                </div>
+            </form>
+        </section>
+
+        <div id="reviewsContainer" class="reviews-dynamic"></div>
+
+        <h3>Примеры отзывов наших клиентов</h3>
+
+        <article class="review static-review">
+            <h4>Заказ Чизкейк манго-маракуя</h4>
+            <p>
+                Галина! Как же я рада, что нашла Вас, такого талантливого кондитера! Во-первых, это невероятно
+                красиво и эстетично! (и оригинальная свеча была в наборе) Главное, этот несравненный вкус
+                <u>натуральных</u> ингредиентов. Я так давно искала именно этот настоящий вкус чизкейка, где все
+                гармонично, ничего лишнего. Восхитительно !!!
+            </p>
+            <p>Жалею только об одном-что сразу не заказала два тортика, так как до праздничного вечера он не дожил)))</p>
+            <p><strong class="text__uppercase">Анализ вкусового профиля:</strong></p>
+            <pre class="pre-code"><code>Вкусовой_отчет {
+    Десерт: "Чизкейк манго-маракуйя",
+    Баланс: [Кислинка_маракуйи: 40%, Сладость_манго: 30%, Нежность_сыра: 30%],
+    Текстура: "Идеально кремовая",
+    Послевкусие: "Долгое, фруктовое",
+    Общая_оценка: "Восхитительно"
+}</code></pre>
+            <p class="review__meta"><time datetime="2025-10-09">9 октября 2024</time></p>
+        </article>
+
+        <article class="review static-review">
+            <h4>Заказ Морковного торта</h4>
+            <p>
+                Торт был потрясающий. Коржи сочные, ну а начинка, просто улёт, как всегда новые, тончайшие вкусы.
+                Если по 5 бальной шкале, то было бы 6, если бы не взрывающаяся клюква в конце, а так 5 с +
+            </p>
+            <p class="review__meta"><time datetime="2025-02-12">12 февраля 2025</time></p>
+        </article>
+
+        <template id="reviewTemplate">
+            <article class="review dynamic-review">
+                <h4 class="review__title"></h4>
+                <div class="review__content">
+                    <div class="review__text"></div>
+                </div>
+
+                <p class="review__meta">
+                    <span class="review__author"></span>
+                    <span class="review__author-separator">.</span>
+                    <time></time>
+                    <span class="review__rating"><span class="rating-value"></span>/5</span>
+                </p>
+
+                <div class="review__actions">
+                    <button class="review__edit">Редактировать</button>
+                    <button class="review__delete">Удалить</button>
+                </div>
+            </article>
+        </template>
+    </section>
+</main>
+
+<footer>
+    <p>© 2026 Dessert boutique. Все права защищены.</p>
+</footer>
+</body>
+</html>
