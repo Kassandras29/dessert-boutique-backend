@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="Отзывы клиентов Dessert boutique">
+  <title>{{title}}</title>
+
+  {{> styles}}
+
+  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+
+  {{> scripts}}
+</head>
+
+<body>
+
+{{> header}}
+
+{{> menu}}
+
+<main>
+  {{> reviews_content}}
+</main>
+
+{{> footer}}
+
+</body>
+</html>

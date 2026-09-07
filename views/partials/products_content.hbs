@@ -1,0 +1,27 @@
+<section id="products">
+  <h2>Наша продукция</h2>
+  <p>Мы предлагаем широкий ассортимент кондитерских изделий:</p>
+
+  <h3>Торты на любой вкус</h3>
+  <ul class="product">
+    <li class="product__item">Классические торты</li>
+    <li class="product__item">Авторские торты по вашему дизайну</li>
+    <li class="product__item">Тематические торты для праздников</li>
+  </ul>
+
+  <h3>Пирожные и десерты</h3>
+  <ol class="product">
+    <li class="product__item">Классические пирожные</li>
+    <li class="product__item">Макаруны различных вкусов</li>
+    <li class="product__item">Эклеры и профитроли</li>
+    <li class="product__item">Чизкейки и муссы</li>
+  </ol>
+
+  <h3>Сезонные предложения</h3>
+
+  <div class="products">
+    {{#each products}}
+      {{> product_card}}
+    {{/each}}
+  </div>
+</section>
