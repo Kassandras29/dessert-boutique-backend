@@ -1,0 +1,113 @@
+{{#> layout}}
+
+  {{#if review}}
+
+    <section id="reviews">
+      <section class="review-form-container">
+        <h2>Редактировать отзыв</h2>
+
+        <form
+          class="review-form"
+          action="/reviews/{{review.id}}?_method=PATCH"
+          method="post"
+        >
+
+          <div class="form-group">
+            <label for="dessertId">
+              Десерт *
+            </label>
+
+            <select
+              id="dessertId"
+              name="dessertId"
+              required
+            >
+              {{#each desserts}}
+                <option
+                  value="{{id}}"
+                  {{#if selected}}selected{{/if}}
+                >
+                  {{name}}
+                </option>
+              {{/each}}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="customerId">
+              Клиент *
+            </label>
+
+            <select
+              id="customerId"
+              name="customerId"
+              required
+            >
+              {{#each customers}}
+                <option
+                  value="{{id}}"
+                  {{#if selected}}selected{{/if}}
+                >
+                  {{name}}
+                </option>
+              {{/each}}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="rating">
+              Оценка *
+            </label>
+
+            <input
+              id="rating"
+              name="rating"
+              type="number"
+              min="1"
+              max="5"
+              value="{{review.rating}}"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="text">
+              Текст отзыва *
+            </label>
+
+            <textarea
+              id="text"
+              name="text"
+              required
+              minlength="10"
+              rows="4"
+            >{{review.text}}</textarea>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn btn-primary"
+            >
+              Сохранить
+            </button>
+
+            <a
+              href="/reviews/{{review.id}}"
+              class="btn btn-secondary"
+            >
+              Отмена
+            </a>
+          </div>
+
+        </form>
+      </section>
+    </section>
+
+  {{else}}
+
+    <h1>Отзыв не найден</h1>
+
+  {{/if}}
+
+{{/layout}}

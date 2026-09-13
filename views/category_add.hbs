@@ -1,0 +1,46 @@
+{{#> layout}}
+
+  <section>
+    <h1>Добавить категорию</h1>
+
+    <form
+      action="/products/categories"
+      method="post"
+    >
+      <div>
+        <label for="name">
+          Название категории:
+        </label>
+
+        <input
+          id="name"
+          name="name"
+          type="text"
+          required
+        >
+      </div>
+
+      <div>
+        <label for="description">
+          Описание:
+        </label>
+
+        <textarea
+          id="description"
+          name="description"
+        ></textarea>
+      </div>
+
+      <button type="submit">
+        Добавить категорию
+      </button>
+    </form>
+
+    <p>
+      <a href="/products/add">
+        Назад к добавлению десерта
+      </a>
+    </p>
+  </section>
+
+{{/layout}}

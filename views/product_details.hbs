@@ -1,0 +1,54 @@
+{{#> layout}}
+
+  {{#if dessert}}
+
+    <section>
+      <h1>
+        {{dessert.name}}
+      </h1>
+
+      {{#if dessert.description}}
+        <p>
+          {{dessert.description}}
+        </p>
+      {{/if}}
+
+      <p>
+        Категория:
+        {{dessert.category.name}}
+      </p>
+
+      <p>
+        Цена:
+        {{dessert.price}} ₽
+      </p>
+
+      <p>
+        <a href="/products/{{dessert.id}}/edit">
+          Редактировать
+        </a>
+      </p>
+
+      <form
+        action="/products/{{dessert.id}}?_method=DELETE"
+        method="post"
+      >
+        <button type="submit">
+          Удалить
+        </button>
+      </form>
+
+      <p>
+        <a href="/products">
+          Назад к каталогу
+        </a>
+      </p>
+    </section>
+
+  {{else}}
+
+    <h1>Десерт не найден</h1>
+
+  {{/if}}
+
+{{/layout}}

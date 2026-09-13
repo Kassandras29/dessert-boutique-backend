@@ -1,0 +1,66 @@
+{{#> layout}}
+
+  <section>
+    <h1>Создать заказ</h1>
+
+    <form action="/orders" method="post">
+
+      <div>
+        <label for="customerId">
+          Клиент:
+        </label>
+
+        <select
+          id="customerId"
+          name="customerId"
+          required
+        >
+          {{#each customers}}
+            <option value="{{id}}">
+              {{name}} — {{email}}
+            </option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div>
+        <label for="dessertId">
+          Десерт:
+        </label>
+
+        <select
+          id="dessertId"
+          name="dessertId"
+          required
+        >
+          {{#each desserts}}
+            <option value="{{id}}">
+              {{name}} — {{price}} ₽
+            </option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div>
+        <label for="quantity">
+          Количество:
+        </label>
+
+        <input
+          id="quantity"
+          name="quantity"
+          type="number"
+          min="1"
+          value="1"
+          required
+        >
+      </div>
+
+      <button type="submit">
+        Создать заказ
+      </button>
+
+    </form>
+  </section>
+
+{{/layout}}

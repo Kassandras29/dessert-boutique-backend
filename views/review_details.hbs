@@ -1,0 +1,55 @@
+{{#> layout}}
+
+  {{#if review}}
+    <section>
+      <h1>
+        Отзыв на {{review.dessert.name}}
+      </h1>
+
+      <p>
+        {{review.text}}
+      </p>
+
+      <p>
+        Клиент: {{review.customer.name}}
+      </p>
+
+      <p>
+        Оценка: {{review.rating}} / 5
+      </p>
+
+      <p>
+        <a href="/reviews/{{review.id}}/edit">
+          Редактировать
+        </a>
+      </p>
+
+      <form
+        action="/reviews/{{review.id}}?_method=DELETE"
+        method="post"
+      >
+        <button type="submit">
+          Удалить
+        </button>
+      </form>
+
+      <p>
+        <a href="/reviews">
+          Назад к отзывам
+        </a>
+      </p>
+    </section>
+
+  {{else}}
+
+    <h1>Отзыв не найден</h1>
+
+    <p>
+      <a href="/reviews">
+        Назад к отзывам
+      </a>
+    </p>
+
+  {{/if}}
+
+{{/layout}}

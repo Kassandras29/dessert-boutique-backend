@@ -1,66 +1,29 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="description" content="Наши клиенты">
-  <title>{{title}}</title>
+{{#> layout}}
 
-  {{> styles}}
+  <section class="users">
+    <h1>Наши клиенты</h1>
 
-  {{> scripts}}
-</head>
+    {{#each customers}}
+      <article>
+        <h2>
+          <a href="/users/{{id}}">
+            {{name}}
+          </a>
+        </h2>
 
-<body>
+        <p>Email: {{email}}</p>
 
-{{> header}}
+        {{#if phone}}
+          <p>Телефон: {{phone}}</p>
+        {{/if}}
+      </article>
+    {{else}}
+      <p>Клиентов пока нет.</p>
+    {{/each}}
 
-{{> menu}}
-
-<main>
-  <section id="users">
-    <h2>Наши клиенты</h2>
-
-    <button id="loadUsersBtn" class="btn btn-primary">
-      Загрузить клиентов
-    </button>
-
-    <div id="loader" class="loader" style="display: none;">
-      <div class="loader__spinner"></div>
-      <p>Загрузка клиентов...</p>
-    </div>
-
-    <div
-      id="errorMessage"
-      class="error-message"
-      style="display: none;"
-    ></div>
-
-    <div id="usersContainer" class="users-grid"></div>
-
-    <template id="userTemplate">
-      <div class="user-card">
-        <h3 class="user__name"></h3>
-        <p class="user__username"></p>
-        <p class="user__email"></p>
-        <p class="user__phone"></p>
-        <p class="user__website"></p>
-
-        <div class="user__address">
-          <h4>Адрес:</h4>
-          <p class="user__address-text"></p>
-        </div>
-
-        <div class="user__company">
-          <h4>Компания:</h4>
-          <p class="user__company-name"></p>
-          <p class="user__company-catchphrase"></p>
-        </div>
-      </div>
-    </template>
+    <p>
+      <a href="/users/add">Добавить клиента</a>
+    </p>
   </section>
-</main>
 
-{{> footer}}
-
-</body>
-</html>
+{{/layout}}

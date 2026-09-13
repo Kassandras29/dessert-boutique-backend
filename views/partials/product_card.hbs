@@ -1,9 +1,23 @@
-<div class="product__card {{className}}">
-  <img
-    class="product__card_image"
-    src="{{image}}"
-    alt="{{alt}}"
-  >
-  <strong>{{name}}</strong>
-  {{description}}
-</div>
+<article class="product__card">
+  <h3 class="product__card_name">
+    <a href="/products/{{id}}">
+      {{name}}
+    </a>
+  </h3>
+
+  {{#if description}}
+    <p>
+      {{description}}
+    </p>
+  {{/if}}
+
+  <p>
+    Категория:
+    {{category.name}}
+  </p>
+
+  <p>
+    Цена:
+    {{price}} ₽
+  </p>
+</article>

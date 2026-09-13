@@ -1,0 +1,50 @@
+{{#> layout}}
+
+  {{#if customer}}
+    <section>
+      <h1>Редактировать клиента</h1>
+
+      <form
+        action="/users/{{customer.id}}?_method=PATCH"
+        method="post"
+      >
+        <div>
+          <label for="name">Имя:</label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            value="{{customer.name}}"
+            required
+          >
+        </div>
+
+        <div>
+          <label for="email">Email:</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value="{{customer.email}}"
+            required
+          >
+        </div>
+
+        <div>
+          <label for="phone">Телефон:</label>
+          <input
+            id="phone"
+            name="phone"
+            type="text"
+            value="{{customer.phone}}"
+          >
+        </div>
+
+        <button type="submit">
+          Сохранить
+        </button>
+      </form>
+    </section>
+  {{/if}}
+
+{{/layout}}

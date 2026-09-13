@@ -1,0 +1,42 @@
+{{#> layout}}
+
+  <section>
+    <h1>Добавить клиента</h1>
+
+    <form action="/users" method="post">
+      <div>
+        <label for="name">Имя:</label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          required
+        >
+      </div>
+
+      <div>
+        <label for="email">Email:</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          required
+        >
+      </div>
+
+      <div>
+        <label for="phone">Телефон:</label>
+        <input
+          id="phone"
+          name="phone"
+          type="text"
+        >
+      </div>
+
+      <button type="submit">
+        Добавить клиента
+      </button>
+    </form>
+  </section>
+
+{{/layout}}

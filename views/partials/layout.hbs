@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  {{#if description}}
+    <meta
+      name="description"
+      content="{{description}}"
+    >
+  {{/if}}
+
+  <title>{{title}}</title>
+
+  {{> styles}}
+</head>
+
+<body>
+
+{{> header}}
+
+{{> menu}}
+
+<main>
+  {{> @partial-block}}
+</main>
+
+{{> footer}}
+
+{{> scripts}}
+
+</body>
+</html>

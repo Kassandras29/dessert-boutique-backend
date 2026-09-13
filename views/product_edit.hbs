@@ -1,0 +1,94 @@
+{{#> layout}}
+
+  {{#if dessert}}
+
+    <section>
+      <h1>
+        Редактировать десерт
+      </h1>
+
+      <form
+        action="/products/{{dessert.id}}?_method=PATCH"
+        method="post"
+      >
+        <div>
+          <label for="name">
+            Название:
+          </label>
+
+          <input
+            id="name"
+            name="name"
+            type="text"
+            value="{{dessert.name}}"
+            required
+          >
+        </div>
+
+        <div>
+          <label for="description">
+            Описание:
+          </label>
+
+          <textarea
+            id="description"
+            name="description"
+          >{{dessert.description}}</textarea>
+        </div>
+
+        <div>
+          <label for="price">
+            Цена:
+          </label>
+
+          <input
+            id="price"
+            name="price"
+            type="number"
+            min="0"
+            step="0.01"
+            value="{{dessert.price}}"
+            required
+          >
+        </div>
+
+        <div>
+          <label for="categoryId">
+            Категория:
+          </label>
+
+          <select
+            id="categoryId"
+            name="categoryId"
+            required
+          >
+            {{#each categories}}
+              <option
+                value="{{id}}"
+                {{#if selected}}selected{{/if}}
+              >
+                {{name}}
+              </option>
+            {{/each}}
+          </select>
+        </div>
+
+        <button type="submit">
+          Сохранить
+        </button>
+      </form>
+
+      <p>
+        <a href="/products/{{dessert.id}}">
+          Отмена
+        </a>
+      </p>
+    </section>
+
+  {{else}}
+
+    <h1>Десерт не найден</h1>
+
+  {{/if}}
+
+{{/layout}}

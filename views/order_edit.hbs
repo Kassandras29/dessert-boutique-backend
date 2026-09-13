@@ -1,0 +1,66 @@
+{{#> layout}}
+
+  {{#if order}}
+    <section>
+
+      <h1>
+        Редактировать заказ №{{order.id}}
+      </h1>
+
+      <form
+        action="/orders/{{order.id}}?_method=PATCH"
+        method="post"
+      >
+
+        <div>
+          <label for="customerId">
+            Клиент:
+          </label>
+
+          <select
+            id="customerId"
+            name="customerId"
+            required
+          >
+            {{#each customers}}
+              <option
+                value="{{id}}"
+                {{#if selected}}selected{{/if}}
+              >
+                {{name}} — {{email}}
+              </option>
+            {{/each}}
+          </select>
+        </div>
+
+        <div>
+          <label for="status">
+            Статус:
+          </label>
+
+          <select
+            id="status"
+            name="status"
+            required
+          >
+            {{#each statuses}}
+              <option
+                value="{{value}}"
+                {{#if selected}}selected{{/if}}
+              >
+                {{value}}
+              </option>
+            {{/each}}
+          </select>
+        </div>
+
+        <button type="submit">
+          Сохранить
+        </button>
+
+      </form>
+
+    </section>
+  {{/if}}
+
+{{/layout}}

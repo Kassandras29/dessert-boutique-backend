@@ -1,0 +1,29 @@
+{{#> layout}}
+
+  <section>
+    <h1>Заказы</h1>
+
+    {{#each orders}}
+      <article>
+        <h2>
+          <a href="/orders/{{id}}">
+            Заказ №{{id}}
+          </a>
+        </h2>
+
+        <p>Клиент: {{customer.name}}</p>
+        <p>Статус: {{status}}</p>
+        <p>Дата: {{createdAt}}</p>
+      </article>
+    {{else}}
+      <p>Заказов пока нет.</p>
+    {{/each}}
+
+    <p>
+      <a href="/orders/add">
+        Создать заказ
+      </a>
+    </p>
+  </section>
+
+{{/layout}}

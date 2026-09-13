@@ -1,0 +1,42 @@
+{{#> layout}}
+
+  {{#if customer}}
+    <section>
+      <h1>{{customer.name}}</h1>
+
+      <p>Email: {{customer.email}}</p>
+
+      {{#if customer.phone}}
+        <p>Телефон: {{customer.phone}}</p>
+      {{/if}}
+
+      <p>
+        Заказов: {{customer.orders.length}}
+      </p>
+
+      <p>
+        Отзывов: {{customer.reviews.length}}
+      </p>
+
+      <a href="/users/{{customer.id}}/edit">
+        Редактировать
+      </a>
+
+      <form
+        action="/users/{{customer.id}}?_method=DELETE"
+        method="post"
+      >
+        <button type="submit">
+          Удалить
+        </button>
+      </form>
+
+      <a href="/users">
+        Назад к клиентам
+      </a>
+    </section>
+  {{else}}
+    <h1>Клиент не найден</h1>
+  {{/if}}
+
+{{/layout}}

@@ -1,0 +1,71 @@
+{{#> layout}}
+
+  {{#if order}}
+    <section>
+      <h1>Заказ №{{order.id}}</h1>
+
+      <p>
+        Клиент:
+        {{order.customer.name}}
+      </p>
+
+      <p>
+        Email:
+        {{order.customer.email}}
+      </p>
+
+      <p>
+        Статус:
+        {{order.status}}
+      </p>
+
+      <p>
+        Дата:
+        {{order.createdAt}}
+      </p>
+
+      <h2>Позиции заказа</h2>
+
+      {{#each order.items}}
+        <article>
+          <h3>{{dessert.name}}</h3>
+
+          <p>
+            Количество: {{quantity}}
+          </p>
+
+          <p>
+            Цена за единицу: {{price}} ₽
+          </p>
+        </article>
+      {{/each}}
+
+      <p>
+        <a href="/orders/{{order.id}}/edit">
+          Редактировать заказ
+        </a>
+      </p>
+
+      <form
+        action="/orders/{{order.id}}?_method=DELETE"
+        method="post"
+      >
+        <button type="submit">
+          Удалить заказ
+        </button>
+      </form>
+
+      <p>
+        <a href="/orders">
+          Назад к заказам
+        </a>
+      </p>
+    </section>
+
+  {{else}}
+
+    <h1>Заказ не найден</h1>
+
+  {{/if}}
+
+{{/layout}}
