@@ -1,7 +1,9 @@
 import { Controller, Get, Query, Render } from '@nestjs/common';
 import { CatalogService } from './catalog/catalog.service';
 import { ReviewsService } from './reviews/reviews.service';
+import { ApiExcludeController } from '@nestjs/swagger';
 
+@ApiExcludeController()
 @Controller()
 export class AppController {
   constructor(

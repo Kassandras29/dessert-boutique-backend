@@ -5,7 +5,7 @@
 
     <form action="/orders" method="post">
 
-      <div>
+      <p>
         <label for="customerId">
           Клиент:
         </label>
@@ -21,46 +21,118 @@
             </option>
           {{/each}}
         </select>
+      </p>
+
+      <div id="orderItems">
+        <div class="order-item">
+          <p>
+            <label>
+              Десерт:
+
+              <select
+                name="items[0][dessertId]"
+                required
+              >
+                {{#each desserts}}
+                  <option value="{{id}}">
+                    {{name}} — {{price}} ₽
+                  </option>
+                {{/each}}
+              </select>
+            </label>
+
+            <label>
+              Количество:
+
+              <input
+                type="number"
+                name="items[0][quantity]"
+                value="1"
+                min="1"
+                required
+              >
+            </label>
+
+            <button
+              type="button"
+              class="remove-order-item"
+              hidden
+            >
+              Удалить
+            </button>
+          </p>
+        </div>
       </div>
 
-      <div>
-        <label for="dessertId">
-          Десерт:
-        </label>
-
-        <select
-          id="dessertId"
-          name="dessertId"
-          required
+      <p>
+        <button
+          type="button"
+          id="addOrderItem"
         >
-          {{#each desserts}}
-            <option value="{{id}}">
-              {{name}} — {{price}} ₽
-            </option>
-          {{/each}}
-        </select>
-      </div>
+          Добавить ещё десерт
+        </button>
+      </p>
 
-      <div>
-        <label for="quantity">
-          Количество:
-        </label>
-
-        <input
-          id="quantity"
-          name="quantity"
-          type="number"
-          min="1"
-          value="1"
-          required
-        >
-      </div>
-
-      <button type="submit">
-        Создать заказ
-      </button>
+      <p>
+        <button type="submit">
+          Создать заказ
+        </button>
+      </p>
 
     </form>
+
+    <p>
+      <a href="/orders">
+        Назад к заказам
+      </a>
+    </p>
   </section>
+
+  <script>
+    const itemsContainer = document.getElementById('orderItems');
+    const addButton = document.getElementById('addOrderItem');
+
+    function updateItemIndexes() {
+      const items = itemsContainer.querySelectorAll('.order-item');
+
+      items.forEach((item, index) => {
+        const dessertSelect = item.querySelector('select');
+        const quantityInput = item.querySelector(
+          'input[type="number"]',
+        );
+        const removeButton = item.querySelector(
+          '.remove-order-item',
+        );
+
+        dessertSelect.name = `items[${index}][dessertId]`;
+        quantityInput.name = `items[${index}][quantity]`;
+
+        removeButton.hidden = items.length === 1;
+      });
+    }
+
+    addButton.addEventListener('click', () => {
+      const firstItem = itemsContainer.querySelector('.order-item');
+      const newItem = firstItem.cloneNode(true);
+
+      newItem.querySelector('input[type="number"]').value = '1';
+
+      itemsContainer.appendChild(newItem);
+
+      updateItemIndexes();
+    });
+
+    itemsContainer.addEventListener('click', (event) => {
+      if (!event.target.classList.contains('remove-order-item')) {
+        return;
+      }
+
+      event.target.closest('.order-item').remove();
+
+      updateItemIndexes();
+    });
+
+    updateItemIndexes();
+  </script>
 
 {{/layout}}

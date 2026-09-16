@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateDessertDto } from './dto/create-dessert.dto';
@@ -18,14 +22,16 @@ export class CatalogService {
   }
 
   async findDessertById(id: number) {
-    return this.prisma.dessert.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        category: true,
-      },
+    const dessert = await this.prisma.dessert.findUnique({
+      where: { id },
+      include: { category: true },
     });
+
+    if (!dessert) {
+      throw new NotFoundException('Десерт не найден');
+    }
+
+    return dessert;
   }
 
   async createDessert(createDessertDto: CreateDessertDto) {
@@ -35,6 +41,9 @@ export class CatalogService {
         description: createDessertDto.description,
         price: createDessertDto.price,
         categoryId: Number(createDessertDto.categoryId),
+      },
+      include: {
+        category: true,
       },
     });
   }
@@ -49,6 +58,9 @@ export class CatalogService {
         description: updateDessertDto.description,
         price: updateDessertDto.price,
         categoryId: Number(updateDessertDto.categoryId),
+      },
+      include: {
+        category: true,
       },
     });
   }
@@ -81,6 +93,18 @@ export class CatalogService {
 
   async findAllCategories() {
     return this.prisma.category.findMany();
+  }
+
+  async findCategoryById(id: number) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Категория не найдена');
+    }
+
+    return category;
   }
 
   async createCategory(createCategoryDto: CreateCategoryDto) {
@@ -122,5 +146,110 @@ export class CatalogService {
         id,
       },
     });
+  }
+
+  async findDessertsByCategory(categoryId: number) {
+    return this.prisma.dessert.findMany({
+      where: {
+        categoryId,
+      },
+      include: {
+        category: true,
+      },
+    });
+  }
+
+  async findDessertInCategory(categoryId: number, dessertId: number) {
+    const dessert = await this.prisma.dessert.findFirst({
+      where: {
+        id: dessertId,
+        categoryId,
+      },
+      include: {
+        category: true,
+      },
+    });
+
+    if (!dessert) {
+      throw new NotFoundException('Десерт категории не найден');
+    }
+
+    return dessert;
+  }
+
+  async findReviewsByDessert(dessertId: number) {
+    return this.prisma.review.findMany({
+      where: {
+        dessertId,
+      },
+      include: {
+        customer: true,
+        dessert: true,
+      },
+    });
+  }
+
+  async findReviewForDessert(dessertId: number, reviewId: number) {
+    const review = await this.prisma.review.findFirst({
+      where: {
+        id: reviewId,
+        dessertId,
+      },
+      include: {
+        customer: true,
+        dessert: true,
+      },
+    });
+
+    if (!review) {
+      throw new NotFoundException('Отзыв на десерт не найден');
+    }
+
+    return review;
+  }
+
+  async findDessertsPage(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.dessert.findMany({
+        skip,
+        take: limit,
+        include: {
+          category: true,
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      }),
+
+      this.prisma.dessert.count(),
+    ]);
+
+    return {
+      items,
+      total,
+    };
+  }
+
+  async findCategoriesPage(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.category.findMany({
+        skip,
+        take: limit,
+        orderBy: {
+          id: 'asc',
+        },
+      }),
+
+      this.prisma.category.count(),
+    ]);
+
+    return {
+      items,
+      total,
+    };
   }
 }

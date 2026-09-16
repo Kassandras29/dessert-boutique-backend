@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -12,15 +16,19 @@ export class CustomersService {
   }
 
   async findOne(id: number) {
-    return this.prisma.customer.findUnique({
-      where: {
-        id,
-      },
+    const customer = await this.prisma.customer.findUnique({
+      where: { id },
       include: {
         orders: true,
         reviews: true,
       },
     });
+
+    if (!customer) {
+      throw new NotFoundException('Клиент не найден');
+    }
+
+    return customer;
   }
 
   async create(createCustomerDto: CreateCustomerDto) {
@@ -70,5 +78,96 @@ export class CustomersService {
         id,
       },
     });
+  }
+
+  async findOrdersByCustomer(customerId: number) {
+    return this.prisma.order.findMany({
+      where: {
+        customerId,
+      },
+      include: {
+        customer: true,
+        items: {
+          include: {
+            dessert: true,
+          },
+        },
+      },
+    });
+  }
+
+  async findOrderForCustomer(customerId: number, orderId: number) {
+    const order = await this.prisma.order.findFirst({
+      where: {
+        id: orderId,
+        customerId,
+      },
+      include: {
+        customer: true,
+        items: {
+          include: {
+            dessert: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Заказ клиента не найден');
+    }
+
+    return order;
+  }
+
+  async findReviewsByCustomer(customerId: number) {
+    return this.prisma.review.findMany({
+      where: {
+        customerId,
+      },
+      include: {
+        customer: true,
+        dessert: true,
+      },
+    });
+  }
+
+  async findReviewForCustomer(customerId: number, reviewId: number) {
+    const review = await this.prisma.review.findFirst({
+      where: {
+        id: reviewId,
+        customerId,
+      },
+      include: {
+        customer: true,
+        dessert: true,
+      },
+    });
+
+    if (!review) {
+      throw new NotFoundException('Отзыв клиента не найден');
+    }
+
+    return review;
+  }
+
+  async findAllPage(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.customer.findMany({
+        skip,
+        take: limit,
+        orderBy: {
+          id: 'asc',
+        },
+      }),
+
+      this.prisma.customer.count(),
+    ]);
+
+    return {
+      items,
+      total,
+    };
   }
 }

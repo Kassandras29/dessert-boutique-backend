@@ -1,18 +1,17 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { Subject } from 'rxjs';
+import {
+  BadRequestException,
+  Injectable,
+  MessageEvent,
+  NotFoundException,
+} from '@nestjs/common';
+import { Observable, Subject } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 
 @Injectable()
 export class ReviewsService {
-  private readonly eventsSubject = new Subject<{
-    data: {
-      type: string;
-      reviewId: number;
-      message: string;
-    };
-  }>();
+  private readonly eventsSubject = new Subject<MessageEvent>();
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -22,11 +21,39 @@ export class ReviewsService {
         customer: true,
         dessert: true,
       },
+      orderBy: {
+        id: 'asc',
+      },
     });
   }
 
+  async findAllPage(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.review.findMany({
+        skip,
+        take: limit,
+        include: {
+          customer: true,
+          dessert: true,
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      }),
+
+      this.prisma.review.count(),
+    ]);
+
+    return {
+      items,
+      total,
+    };
+  }
+
   async findOne(id: number) {
-    return this.prisma.review.findUnique({
+    const review = await this.prisma.review.findUnique({
       where: {
         id,
       },
@@ -35,27 +62,42 @@ export class ReviewsService {
         dessert: true,
       },
     });
+
+    if (!review) {
+      throw new NotFoundException('Отзыв не найден');
+    }
+
+    return review;
   }
 
   async findAllCustomers() {
-    return this.prisma.customer.findMany();
+    return this.prisma.customer.findMany({
+      orderBy: {
+        id: 'asc',
+      },
+    });
   }
 
   async findAllDesserts() {
-    return this.prisma.dessert.findMany();
+    return this.prisma.dessert.findMany({
+      include: {
+        category: true,
+      },
+      orderBy: {
+        id: 'asc',
+      },
+    });
   }
 
   async create(createReviewDto: CreateReviewDto) {
-    const rating = Number(createReviewDto.rating);
-
-    this.validateRating(rating);
+    this.validateRating(createReviewDto.rating);
 
     const review = await this.prisma.review.create({
       data: {
-        rating,
+        rating: createReviewDto.rating,
         text: createReviewDto.text,
-        customerId: Number(createReviewDto.customerId),
-        dessertId: Number(createReviewDto.dessertId),
+        customerId: createReviewDto.customerId,
+        dessertId: createReviewDto.dessertId,
       },
       include: {
         customer: true,
@@ -65,9 +107,7 @@ export class ReviewsService {
 
     this.eventsSubject.next({
       data: {
-        type: 'created',
-        reviewId: review.id,
-        message: `Добавлен новый отзыв на десерт «${review.dessert.name}»`,
+        message: `Добавлен новый отзыв #${review.id}`,
       },
     });
 
@@ -75,30 +115,27 @@ export class ReviewsService {
   }
 
   async update(id: number, updateReviewDto: UpdateReviewDto) {
-    const rating = Number(updateReviewDto.rating);
-
-    this.validateRating(rating);
+    this.validateRating(updateReviewDto.rating);
 
     const review = await this.prisma.review.update({
       where: {
         id,
       },
       data: {
-        rating,
+        rating: updateReviewDto.rating,
         text: updateReviewDto.text,
-        customerId: Number(updateReviewDto.customerId),
-        dessertId: Number(updateReviewDto.dessertId),
+        customerId: updateReviewDto.customerId,
+        dessertId: updateReviewDto.dessertId,
       },
       include: {
+        customer: true,
         dessert: true,
       },
     });
 
     this.eventsSubject.next({
       data: {
-        type: 'updated',
-        reviewId: review.id,
-        message: `Изменён отзыв на десерт «${review.dessert.name}»`,
+        message: `Отзыв #${review.id} обновлён`,
       },
     });
 
@@ -110,23 +147,18 @@ export class ReviewsService {
       where: {
         id,
       },
-      include: {
-        dessert: true,
-      },
     });
 
     this.eventsSubject.next({
       data: {
-        type: 'deleted',
-        reviewId: review.id,
-        message: `Удалён отзыв на десерт «${review.dessert.name}»`,
+        message: `Отзыв #${review.id} удалён`,
       },
     });
 
     return review;
   }
 
-  streamEvents() {
+  streamEvents(): Observable<MessageEvent> {
     return this.eventsSubject.asObservable();
   }
 

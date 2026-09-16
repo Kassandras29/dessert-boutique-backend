@@ -15,7 +15,9 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateDessertDto } from './dto/create-dessert.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UpdateDessertDto } from './dto/update-dessert.dto';
+import { ApiExcludeController } from '@nestjs/swagger';
 
+@ApiExcludeController()
 @Controller('products')
 export class CatalogController {
   constructor(private readonly catalogService: CatalogService) {}
