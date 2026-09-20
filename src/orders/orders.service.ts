@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { OrderStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -210,5 +211,129 @@ export class OrdersService {
     }
 
     return item;
+  }
+
+  async confirmOrder(id: number) {
+    const order = await this.findOne(id);
+
+    if (order.status !== OrderStatus.NEW) {
+      throw new BadRequestException('Подтвердить можно только новый заказ');
+    }
+
+    return this.prisma.order.update({
+      where: { id },
+      data: {
+        status: OrderStatus.CONFIRMED,
+      },
+      include: {
+        customer: true,
+        items: {
+          include: {
+            dessert: true,
+          },
+        },
+      },
+    });
+  }
+
+  async startOrder(id: number) {
+    const order = await this.findOne(id);
+
+    if (order.status !== OrderStatus.CONFIRMED) {
+      throw new BadRequestException(
+        'Начать приготовление можно только для подтвержденного заказа',
+      );
+    }
+
+    return this.prisma.order.update({
+      where: { id },
+      data: {
+        status: OrderStatus.IN_PROGRESS,
+      },
+      include: {
+        customer: true,
+        items: {
+          include: {
+            dessert: true,
+          },
+        },
+      },
+    });
+  }
+
+  async markOrderReady(id: number) {
+    const order = await this.findOne(id);
+
+    if (order.status !== OrderStatus.IN_PROGRESS) {
+      throw new BadRequestException(
+        'Готовым можно отметить только заказ в процессе приготовления',
+      );
+    }
+
+    return this.prisma.order.update({
+      where: { id },
+      data: {
+        status: OrderStatus.READY,
+      },
+      include: {
+        customer: true,
+        items: {
+          include: {
+            dessert: true,
+          },
+        },
+      },
+    });
+  }
+
+  async completeOrder(id: number) {
+    const order = await this.findOne(id);
+
+    if (order.status !== OrderStatus.READY) {
+      throw new BadRequestException('Завершить можно только готовый заказ');
+    }
+
+    return this.prisma.order.update({
+      where: { id },
+      data: {
+        status: OrderStatus.COMPLETED,
+      },
+      include: {
+        customer: true,
+        items: {
+          include: {
+            dessert: true,
+          },
+        },
+      },
+    });
+  }
+
+  async cancelOrder(id: number) {
+    const order = await this.findOne(id);
+
+    if (
+      order.status === OrderStatus.COMPLETED ||
+      order.status === OrderStatus.CANCELLED
+    ) {
+      throw new BadRequestException(
+        'Завершенный или уже отмененный заказ отменить нельзя',
+      );
+    }
+
+    return this.prisma.order.update({
+      where: { id },
+      data: {
+        status: OrderStatus.CANCELLED,
+      },
+      include: {
+        customer: true,
+        items: {
+          include: {
+            dessert: true,
+          },
+        },
+      },
+    });
   }
 }
