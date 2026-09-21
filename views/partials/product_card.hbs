@@ -1,4 +1,13 @@
 <article class="product__card">
+
+  {{#if imageUrl}}
+    <img
+      class="product__card_image"
+      src="{{imageUrl}}"
+      alt="{{name}}"
+    >
+  {{/if}}
+
   <h3 class="product__card_name">
     <a href="/products/{{id}}">
       {{name}}

@@ -24,26 +24,29 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
-
 import { CatalogService } from './catalog.service';
-
 import { CreateDessertDto } from './dto/create-dessert.dto';
 import { UpdateDessertDto } from './dto/update-dessert.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-
 import { DessertResponseDto } from './dto/dessert-response.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
 import { ReviewResponseDto } from '../reviews/dto/review-response.dto';
-
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { buildPaginationLink } from '../common/utils/pagination.util';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject } from '@nestjs/common';
+import type { Cache } from 'cache-manager';
 
 @ApiTags('Catalog')
 @Controller('api')
 export class CatalogApiController {
-  constructor(private readonly catalogService: CatalogService) {}
+  constructor(
+    private readonly catalogService: CatalogService,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
+  ) {}
 
   @ApiOperation({
     summary: 'Получить список десертов',
@@ -85,10 +88,21 @@ export class CatalogApiController {
     @Query() query: PaginationQueryDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const result = await this.catalogService.findDessertsPage(
-      query.page,
-      query.limit,
-    );
+    const cacheKey = `products:${query.page}:${query.limit}`;
+
+    let result =
+      await this.cacheManager.get<
+        Awaited<ReturnType<CatalogService['findDessertsPage']>>
+      >(cacheKey);
+
+    if (!result) {
+      result = await this.catalogService.findDessertsPage(
+        query.page,
+        query.limit,
+      );
+
+      await this.cacheManager.set(cacheKey, result, 5000);
+    }
 
     const link = buildPaginationLink(
       '/api/products',

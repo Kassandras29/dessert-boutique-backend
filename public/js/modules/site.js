@@ -10,15 +10,10 @@ export function initSite() {
 
 function displayPageLoadTime() {
     const loadTime = Date.now() - performance.timeOrigin;
+    const element = document.getElementById('clientElapsedTime');
 
-    const footer = document.querySelector('footer');
-    if (footer) {
-        const loadInfo = document.createElement('p');
-        loadInfo.className = 'page-load-info';
-        loadInfo.textContent = `Страница загружена за ${Math.round(loadTime)} мс`;
-        footer.appendChild(loadInfo);
-    } else {
-        console.warn('Футер не найден! Проверьте HTML.');
+    if (element) {
+        element.textContent = Math.round(loadTime);
     }
 
     console.log(`Load time: ${Math.round(loadTime)} ms`);

@@ -9,18 +9,25 @@ import {
   Query,
   Redirect,
   Render,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ObjectStorageService } from '../object-storage/object-storage.service';
 import { CatalogService } from './catalog.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateDessertDto } from './dto/create-dessert.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UpdateDessertDto } from './dto/update-dessert.dto';
-import { ApiExcludeController } from '@nestjs/swagger';
 
 @ApiExcludeController()
 @Controller('products')
 export class CatalogController {
-  constructor(private readonly catalogService: CatalogService) {}
+  constructor(
+    private readonly catalogService: CatalogService,
+    private readonly objectStorageService: ObjectStorageService,
+  ) {}
 
   @Get()
   @Render('products')
@@ -48,11 +55,22 @@ export class CatalogController {
 
   @Post()
   @Redirect('/products', 303)
+  @UseInterceptors(FileInterceptor('image'))
   async createDessert(
     @Body()
     createDessertDto: CreateDessertDto,
+    @UploadedFile()
+    file?: {
+      originalname: string;
+      mimetype: string;
+      buffer: Buffer;
+    },
   ) {
-    await this.catalogService.createDessert(createDessertDto);
+    const imageUrl = file
+      ? await this.objectStorageService.uploadFile(file)
+      : undefined;
+
+    await this.catalogService.createDessert(createDessertDto, imageUrl);
   }
 
   @Get('categories/add')

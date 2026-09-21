@@ -34,13 +34,14 @@ export class CatalogService {
     return dessert;
   }
 
-  async createDessert(createDessertDto: CreateDessertDto) {
+  async createDessert(createDessertDto: CreateDessertDto, imageUrl?: string) {
     return this.prisma.dessert.create({
       data: {
         name: createDessertDto.name,
         description: createDessertDto.description,
         price: createDessertDto.price,
         categoryId: Number(createDessertDto.categoryId),
+        imageUrl,
       },
       include: {
         category: true,

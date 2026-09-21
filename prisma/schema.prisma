@@ -36,6 +36,7 @@ model Dessert {
   name        String
   description String?
   price       Decimal @db.Decimal(10, 2)
+  imageUrl String?
 
   categoryId Int
   category   Category @relation(fields: [categoryId], references: [id])
