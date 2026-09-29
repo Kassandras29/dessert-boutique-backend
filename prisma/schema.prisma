@@ -18,6 +18,7 @@ model Customer {
   name  String
   email String  @unique
   phone String?
+  authUserId String? @unique
 
   orders  Order[]
   reviews Review[]

@@ -14,6 +14,7 @@ import { ElapsedTimeInterceptor } from './common/interceptors/elapsed-time.inter
 import type { Request, Response } from 'express';
 import { ETagInterceptor } from './common/interceptors/etag.interceptor';
 import { CacheModule } from '@nestjs/cache-manager';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -36,6 +37,13 @@ import { CacheModule } from '@nestjs/cache-manager';
     CacheModule.register({
       isGlobal: true,
       ttl: 5000,
+    }),
+
+    AuthModule.register({
+      connectionUri: process.env.SUPERTOKENS_CONNECTION_URI ?? '',
+      apiKey: process.env.SUPERTOKENS_API_KEY ?? '',
+      appName: process.env.SUPERTOKENS_APP_NAME ?? 'Dessert Boutique',
+      appUrl: process.env.APP_URL ?? 'http://localhost:9021',
     }),
   ],
   controllers: [AppController],

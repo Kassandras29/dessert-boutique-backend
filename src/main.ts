@@ -1,28 +1,32 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { join } from 'path';
 import hbs from 'hbs';
 import methodOverride from 'method-override';
-import { ValidationPipe } from '@nestjs/common';
+import supertokens from 'supertokens-node';
+import { AppModule } from './app.module';
 import { AppExceptionFilter } from './common/filters/app-exception.filter';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  app.useGlobalFilters(new AppExceptionFilter());
+
+  app.enableCors({
+    origin: process.env.APP_URL ?? 'http://localhost:9021',
+
+    allowedHeaders: ['content-type', ...supertokens.getAllCORSHeaders()],
+
+    credentials: true,
+  });
+  app.use(methodOverride('_method'));
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
       transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
     }),
   );
-
-  app.use(methodOverride('_method'));
+  app.useGlobalFilters(new AppExceptionFilter());
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.setViewEngine('hbs');
@@ -32,12 +36,17 @@ async function bootstrap() {
     .setTitle('Dessert Boutique API')
     .setDescription('REST API кондитерской Dessert Boutique')
     .setVersion('1.0')
+    .addSecurity('supertokens', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'sAccessToken',
+    })
     .build();
-
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-
   SwaggerModule.setup('api/docs', app, swaggerDocument);
-  await app.listen(process.env.PORT ?? 9020);
+
+  const port = Number(process.env.PORT) || 9020;
+  await app.listen(port);
 }
 
 void bootstrap();

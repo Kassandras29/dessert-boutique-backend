@@ -1,9 +1,54 @@
 <div class="session-info">
   {{#if user}}
-    <span>Вы вошли как <strong>{{user.name}}</strong></span>
-    <a href="?auth=0">Выйти</a>
+    <span>
+      Вы вошли как
+      <strong>{{user.name}}</strong>
+    </span>
+
+    <a href="/users/{{user.id}}">
+      Мой профиль
+    </a>
+
+    {{#if user.isAdmin}}
+      <a href="/users">
+        Клиенты
+      </a>
+
+      <a href="/products/add">
+        Добавить десерт
+      </a>
+    {{/if}}
+
+    <button
+      type="button"
+      id="logoutButton"
+    >
+      Выйти
+    </button>
   {{else}}
     <span>Вы не авторизованы</span>
-    <a href="?auth=1">Войти</a>
+
+    <a href="/auth/login">
+      Войти
+    </a>
+
+    <a href="/auth/register">
+      Регистрация
+    </a>
   {{/if}}
 </div>
+
+{{#if user}}
+  <script>
+    document
+      .getElementById('logoutButton')
+      ?.addEventListener('click', async () => {
+        await fetch('/auth/signout', {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        window.location.href = '/';
+      });
+  </script>
+{{/if}}

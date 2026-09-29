@@ -10,7 +10,10 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -21,23 +24,46 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
+  ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
-
+import type { SessionRequest } from 'supertokens-node/framework/express';
+import UserRoles from 'supertokens-node/recipe/userroles';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { ReviewResponseDto } from './dto/review-response.dto';
-
+import { ReviewOwnerOrAdminGuard } from './review-owner-or-admin.guard';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { buildPaginationLink } from '../common/utils/pagination.util';
+import { AuthGuard } from '../auth/auth.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @ApiTags('Reviews')
 @Controller('api/reviews')
 export class ReviewsApiController {
   constructor(private readonly reviewsService: ReviewsService) {}
+
+  private getUserId(request: SessionRequest): string {
+    if (!request.session) {
+      throw new UnauthorizedException('Authentication required');
+    }
+
+    return request.session.getUserId();
+  }
+
+  private async isAdmin(request: SessionRequest): Promise<boolean> {
+    if (!request.session) {
+      return false;
+    }
+
+    const roles = await request.session.getClaimValue(UserRoles.UserRoleClaim);
+
+    return roles?.includes('ADMIN') ?? false;
+  }
 
   @ApiOperation({
     summary: 'Получить список отзывов',
@@ -76,8 +102,10 @@ export class ReviewsApiController {
   })
   @Get()
   async findAll(
-    @Query() query: PaginationQueryDto,
-    @Res({ passthrough: true }) response: Response,
+    @Query()
+    query: PaginationQueryDto,
+    @Res({ passthrough: true })
+    response: Response,
   ) {
     const result = await this.reviewsService.findAllPage(
       query.page,
@@ -133,9 +161,24 @@ export class ReviewsApiController {
     description: 'Ошибка связанных данных',
     type: ErrorResponseDto,
   })
+  @ApiSecurity('supertokens')
   @Post()
-  create(@Body() createReviewDto: CreateReviewDto) {
-    return this.reviewsService.create(createReviewDto);
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('USER', 'ADMIN')
+  async create(
+    @Body()
+    createReviewDto: CreateReviewDto,
+    @Req()
+    request: SessionRequest,
+  ) {
+    if (await this.isAdmin(request)) {
+      return this.reviewsService.create(createReviewDto);
+    }
+
+    return this.reviewsService.createForAuthUser(
+      createReviewDto,
+      this.getUserId(request),
+    );
   }
 
   @ApiOperation({
@@ -157,12 +200,26 @@ export class ReviewsApiController {
     description: 'Ошибка связанных данных',
     type: ErrorResponseDto,
   })
+  @ApiSecurity('supertokens')
   @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateReviewDto: UpdateReviewDto,
+  @UseGuards(AuthGuard, ReviewOwnerOrAdminGuard)
+  async update(
+    @Param('id', ParseIntPipe)
+    id: number,
+    @Body()
+    updateReviewDto: UpdateReviewDto,
+    @Req()
+    request: SessionRequest,
   ) {
-    return this.reviewsService.update(id, updateReviewDto);
+    if (await this.isAdmin(request)) {
+      return this.reviewsService.update(id, updateReviewDto);
+    }
+
+    return this.reviewsService.updateForAuthUser(
+      id,
+      updateReviewDto,
+      this.getUserId(request),
+    );
   }
 
   @ApiOperation({
@@ -179,9 +236,14 @@ export class ReviewsApiController {
     description: 'Отзыв не найден',
     type: ErrorResponseDto,
   })
+  @ApiSecurity('supertokens')
   @Delete(':id')
+  @UseGuards(AuthGuard, ReviewOwnerOrAdminGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id', ParseIntPipe) id: number) {
+  async remove(
+    @Param('id', ParseIntPipe)
+    id: number,
+  ) {
     await this.reviewsService.remove(id);
   }
 }

@@ -6,57 +6,114 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   Redirect,
   Render,
+  Req,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { OrderStatus } from '@prisma/client';
+import { ApiExcludeController } from '@nestjs/swagger';
+import type { SessionRequest } from 'supertokens-node/framework/express';
+import UserRoles from 'supertokens-node/recipe/userroles';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { ApiExcludeController } from '@nestjs/swagger';
+import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { OrderOwnerOrAdminGuard } from './order-owner-or-admin.guard';
 
 @ApiExcludeController()
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+  private getUserId(request: SessionRequest): string {
+    if (!request.session) {
+      throw new UnauthorizedException('Authentication required');
+    }
+
+    return request.session.getUserId();
+  }
+
+  private async isAdmin(request: SessionRequest): Promise<boolean> {
+    if (!request.session) {
+      return false;
+    }
+
+    const roles = await request.session.getClaimValue(UserRoles.UserRoleClaim);
+
+    return roles?.includes('ADMIN') ?? false;
+  }
+
   @Get()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('USER', 'ADMIN')
   @Render('orders')
-  async findAll(@Query('auth') auth?: string) {
-    const orders = await this.ordersService.findAll();
+  async findAll(@Req() request: SessionRequest) {
+    const orders = (await this.isAdmin(request))
+      ? this.ordersService.findAll()
+      : this.ordersService.findAllForAuthUser(this.getUserId(request));
 
     return {
       title: 'Заказы - Dessert boutique',
-      user: auth === '1' ? { name: 'Irina' } : null,
       orders,
     };
   }
 
   @Get('add')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('USER', 'ADMIN')
   @Render('order_add')
-  async getAddPage(@Query('auth') auth?: string) {
-    const customers = await this.ordersService.findAllCustomers();
+  async getAddPage(@Req() request: SessionRequest) {
+    const isAdmin = await this.isAdmin(request);
+
+    const customers = isAdmin
+      ? await this.ordersService.findAllCustomers()
+      : [
+          await this.ordersService.findCustomerForAuthUser(
+            this.getUserId(request),
+          ),
+        ];
+
     const desserts = await this.ordersService.findAllDesserts();
 
     return {
       title: 'Создать заказ - Dessert boutique',
-      user: auth === '1' ? { name: 'Irina' } : null,
       customers,
       desserts,
     };
   }
 
   @Post()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('USER', 'ADMIN')
   @Redirect('/orders', 303)
-  async create(@Body() createOrderDto: CreateOrderDto) {
-    await this.ordersService.create(createOrderDto);
+  async create(
+    @Body()
+    createOrderDto: CreateOrderDto,
+    @Req() request: SessionRequest,
+  ) {
+    if (await this.isAdmin(request)) {
+      await this.ordersService.create(createOrderDto);
+
+      return;
+    }
+
+    await this.ordersService.createForAuthUser(
+      createOrderDto,
+      this.getUserId(request),
+    );
   }
 
   @Get(':id/edit')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Render('order_edit')
-  async getEditPage(@Param('id') id: string, @Query('auth') auth?: string) {
+  async getEditPage(@Param('id') id: string) {
     const order = await this.ordersService.findOne(Number(id));
+
     const customers = await this.ordersService.findAllCustomers();
 
     const customersWithSelected = customers.map((customer) => ({
@@ -71,7 +128,6 @@ export class OrdersController {
 
     return {
       title: 'Редактировать заказ - Dessert boutique',
-      user: auth === '1' ? { name: 'Irina' } : null,
       order,
       customers: customersWithSelected,
       statuses,
@@ -79,28 +135,32 @@ export class OrdersController {
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Redirect('/orders', 303)
   async update(
     @Param('id') id: string,
-    @Body() updateOrderDto: UpdateOrderDto,
+    @Body()
+    updateOrderDto: UpdateOrderDto,
   ) {
     await this.ordersService.update(Number(id), updateOrderDto);
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard, OrderOwnerOrAdminGuard)
   @Redirect('/orders', 303)
   async remove(@Param('id') id: string) {
     await this.ordersService.remove(Number(id));
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard, OrderOwnerOrAdminGuard)
   @Render('order_details')
-  async findOne(@Param('id') id: string, @Query('auth') auth?: string) {
+  async findOne(@Param('id') id: string) {
     const order = await this.ordersService.findOne(Number(id));
 
     return {
       title: `Заказ №${order?.id ?? ''} - Dessert boutique`,
-      user: auth === '1' ? { name: 'Irina' } : null,
       order,
     };
   }

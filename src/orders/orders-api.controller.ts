@@ -10,7 +10,10 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -22,23 +25,47 @@ import {
   ApiOperation,
   ApiQuery,
   ApiTags,
+  ApiSecurity,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
-
+import type { SessionRequest } from 'supertokens-node/framework/express';
+import UserRoles from 'supertokens-node/recipe/userroles';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderResponseDto } from './dto/order-response.dto';
 import { OrderItemResponseDto } from './dto/order-item-response.dto';
-
+import { OrderOwnerOrAdminGuard } from './order-owner-or-admin.guard';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { buildPaginationLink } from '../common/utils/pagination.util';
+import { AuthGuard } from '../auth/auth.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @ApiTags('Orders')
+@ApiSecurity('supertokens')
 @Controller('api/orders')
 export class OrdersApiController {
   constructor(private readonly ordersService: OrdersService) {}
+
+  private getUserId(request: SessionRequest): string {
+    if (!request.session) {
+      throw new UnauthorizedException('Authentication required');
+    }
+
+    return request.session.getUserId();
+  }
+
+  private async isAdmin(request: SessionRequest): Promise<boolean> {
+    if (!request.session) {
+      return false;
+    }
+
+    const roles = await request.session.getClaimValue(UserRoles.UserRoleClaim);
+
+    return roles?.includes('ADMIN') ?? false;
+  }
 
   @ApiOperation({
     summary: 'Получить список заказов',
@@ -76,14 +103,23 @@ export class OrdersApiController {
     type: ErrorResponseDto,
   })
   @Get()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('USER', 'ADMIN')
   async findAll(
     @Query() query: PaginationQueryDto,
-    @Res({ passthrough: true }) response: Response,
+    @Res({ passthrough: true })
+    response: Response,
+    @Req() request: SessionRequest,
   ) {
-    const result = await this.ordersService.findAllPage(
-      query.page,
-      query.limit,
-    );
+    const isAdmin = await this.isAdmin(request);
+
+    const result = await (isAdmin
+      ? this.ordersService.findAllPage(query.page, query.limit)
+      : this.ordersService.findAllPageForAuthUser(
+          this.getUserId(request),
+          query.page,
+          query.limit,
+        ));
 
     const link = buildPaginationLink(
       '/api/orders',
@@ -112,6 +148,7 @@ export class OrdersApiController {
     type: ErrorResponseDto,
   })
   @Get(':id/items')
+  @UseGuards(AuthGuard, OrderOwnerOrAdminGuard)
   findOrderItems(@Param('id', ParseIntPipe) id: number) {
     return this.ordersService.findItemsByOrder(id);
   }
@@ -132,9 +169,11 @@ export class OrdersApiController {
     type: ErrorResponseDto,
   })
   @Get(':id/items/:itemId')
+  @UseGuards(AuthGuard, OrderOwnerOrAdminGuard)
   findOrderItem(
     @Param('id', ParseIntPipe) id: number,
-    @Param('itemId', ParseIntPipe) itemId: number,
+    @Param('itemId', ParseIntPipe)
+    itemId: number,
   ) {
     return this.ordersService.findItemForOrder(id, itemId);
   }
@@ -155,6 +194,7 @@ export class OrdersApiController {
     type: ErrorResponseDto,
   })
   @Get(':id')
+  @UseGuards(AuthGuard, OrderOwnerOrAdminGuard)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.ordersService.findOne(id);
   }
@@ -175,8 +215,21 @@ export class OrdersApiController {
     type: ErrorResponseDto,
   })
   @Post()
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(createOrderDto);
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('USER', 'ADMIN')
+  async create(
+    @Body()
+    createOrderDto: CreateOrderDto,
+    @Req() request: SessionRequest,
+  ) {
+    if (await this.isAdmin(request)) {
+      return this.ordersService.create(createOrderDto);
+    }
+
+    return this.ordersService.createForAuthUser(
+      createOrderDto,
+      this.getUserId(request),
+    );
   }
 
   @ApiOperation({
@@ -199,9 +252,12 @@ export class OrdersApiController {
     type: ErrorResponseDto,
   })
   @Patch(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateOrderDto: UpdateOrderDto,
+    @Body()
+    updateOrderDto: UpdateOrderDto,
   ) {
     return this.ordersService.update(id, updateOrderDto);
   }
@@ -221,6 +277,7 @@ export class OrdersApiController {
     type: ErrorResponseDto,
   })
   @Delete(':id')
+  @UseGuards(AuthGuard, OrderOwnerOrAdminGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.ordersService.remove(id);

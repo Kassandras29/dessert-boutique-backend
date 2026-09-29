@@ -11,6 +11,7 @@ import {
   Post,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -22,22 +23,26 @@ import {
   ApiOperation,
   ApiQuery,
   ApiTags,
+  ApiSecurity,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
-
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CustomerResponseDto } from './dto/customer-response.dto';
-
 import { OrderResponseDto } from '../orders/dto/order-response.dto';
 import { ReviewResponseDto } from '../reviews/dto/review-response.dto';
-
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { buildPaginationLink } from '../common/utils/pagination.util';
+import { AuthGuard } from '../auth/auth.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @ApiTags('Customers')
+@ApiSecurity('supertokens')
+@UseGuards(AuthGuard, RolesGuard)
+@Roles('ADMIN')
 @Controller('api/customers')
 export class CustomersApiController {
   constructor(private readonly customersService: CustomersService) {}

@@ -6,10 +6,10 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   Redirect,
   Render,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
@@ -20,6 +20,9 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateDessertDto } from './dto/create-dessert.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UpdateDessertDto } from './dto/update-dessert.dto';
+import { AuthGuard } from '../auth/auth.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @ApiExcludeController()
 @Controller('products')
@@ -31,29 +34,31 @@ export class CatalogController {
 
   @Get()
   @Render('products')
-  async getProductsPage(@Query('auth') auth?: string) {
+  async getProductsPage() {
     const products = await this.catalogService.findAllDesserts();
 
     return {
       title: 'Каталог - Dessert boutique',
-      user: auth === '1' ? { name: 'Irina' } : null,
       products,
     };
   }
 
   @Get('add')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Render('product_add')
-  async getAddDessertPage(@Query('auth') auth?: string) {
+  async getAddDessertPage() {
     const categories = await this.catalogService.findAllCategories();
 
     return {
       title: 'Добавить десерт - Dessert boutique',
-      user: auth === '1' ? { name: 'Irina' } : null,
       categories,
     };
   }
 
   @Post()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Redirect('/products', 303)
   @UseInterceptors(FileInterceptor('image'))
   async createDessert(
@@ -74,15 +79,18 @@ export class CatalogController {
   }
 
   @Get('categories/add')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Render('category_add')
-  getAddCategoryPage(@Query('auth') auth?: string) {
+  getAddCategoryPage() {
     return {
       title: 'Добавить категорию - Dessert boutique',
-      user: auth === '1' ? { name: 'Irina' } : null,
     };
   }
 
   @Post('categories')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Redirect('/products/add', 303)
   async createCategory(
     @Body()
@@ -92,6 +100,8 @@ export class CatalogController {
   }
 
   @Patch('categories/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Redirect('/products/add', 303)
   async updateCategory(
     @Param('id') id: string,
@@ -102,17 +112,18 @@ export class CatalogController {
   }
 
   @Delete('categories/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Redirect('/products/add', 303)
   async deleteCategory(@Param('id') id: string) {
     await this.catalogService.deleteCategory(Number(id));
   }
 
   @Get(':id/edit')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Render('product_edit')
-  async getEditDessertPage(
-    @Param('id') id: string,
-    @Query('auth') auth?: string,
-  ) {
+  async getEditDessertPage(@Param('id') id: string) {
     const dessert = await this.catalogService.findDessertById(Number(id));
 
     const categories = await this.catalogService.findAllCategories();
@@ -124,13 +135,14 @@ export class CatalogController {
 
     return {
       title: `Редактировать ${dessert?.name ?? 'десерт'} - Dessert boutique`,
-      user: auth === '1' ? { name: 'Irina' } : null,
       dessert,
       categories: categoriesWithSelected,
     };
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Redirect('/products', 303)
   async updateDessert(
     @Param('id') id: string,
@@ -141,6 +153,8 @@ export class CatalogController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Redirect('/products', 303)
   async deleteDessert(@Param('id') id: string) {
     await this.catalogService.deleteDessert(Number(id));
@@ -148,12 +162,11 @@ export class CatalogController {
 
   @Get(':id')
   @Render('product_details')
-  async getDessertPage(@Param('id') id: string, @Query('auth') auth?: string) {
+  async getDessertPage(@Param('id') id: string) {
     const dessert = await this.catalogService.findDessertById(Number(id));
 
     return {
       title: `${dessert?.name ?? 'Десерт'} - Dessert boutique`,
-      user: auth === '1' ? { name: 'Irina' } : null,
       dessert,
     };
   }

@@ -1,7 +1,7 @@
-import { Controller, Get, Query, Render } from '@nestjs/common';
+import { Controller, Get, Render } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import { CatalogService } from './catalog/catalog.service';
 import { ReviewsService } from './reviews/reviews.service';
-import { ApiExcludeController } from '@nestjs/swagger';
 
 @ApiExcludeController()
 @Controller()
@@ -13,7 +13,7 @@ export class AppController {
 
   @Get()
   @Render('index')
-  async getIndexPage(@Query('auth') auth?: string) {
+  async getIndexPage() {
     const products = await this.catalogService.findAllDesserts();
     const reviews = await this.reviewsService.findAll();
 
@@ -21,7 +21,6 @@ export class AppController {
       title: 'Dessert boutique',
       description:
         'Кондитерская Dessert boutique - вкуснейшие десерты ручной работы из натуральных ингредиентов',
-      user: auth === '1' ? { name: 'Irina' } : null,
       products,
       reviews,
     };
@@ -29,41 +28,37 @@ export class AppController {
 
   @Get('about')
   @Render('about')
-  getAboutPage(@Query('auth') auth?: string) {
+  getAboutPage() {
     return {
       title: 'О нас - Dessert boutique',
       description: 'О кондитерской Dessert boutique',
-      user: auth === '1' ? { name: 'Irina' } : null,
     };
   }
 
   @Get('history_desserts')
   @Render('history_desserts')
-  getHistoryDessertsPage(@Query('auth') auth?: string) {
+  getHistoryDessertsPage() {
     return {
       title: 'Истории десертов - Dessert boutique',
       description: 'Истории знаменитых десертов',
-      user: auth === '1' ? { name: 'Irina' } : null,
     };
   }
 
   @Get('prices')
   @Render('prices')
-  getPricesPage(@Query('auth') auth?: string) {
+  getPricesPage() {
     return {
       title: 'Цены - Dessert boutique',
       description: 'Цены на десерты Dessert boutique',
-      user: auth === '1' ? { name: 'Irina' } : null,
     };
   }
 
   @Get('contacts')
   @Render('contacts')
-  getContactsPage(@Query('auth') auth?: string) {
+  getContactsPage() {
     return {
       title: 'Контакты - Dessert boutique',
       description: 'Контакты Dessert boutique',
-      user: auth === '1' ? { name: 'Irina' } : null,
     };
   }
 }

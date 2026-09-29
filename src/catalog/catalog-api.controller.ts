@@ -5,12 +5,14 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Patch,
   Post,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -21,9 +23,12 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
+  ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { CatalogService } from './catalog.service';
 import { CreateDessertDto } from './dto/create-dessert.dto';
 import { UpdateDessertDto } from './dto/update-dessert.dto';
@@ -35,9 +40,9 @@ import { ReviewResponseDto } from '../reviews/dto/review-response.dto';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { buildPaginationLink } from '../common/utils/pagination.util';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject } from '@nestjs/common';
-import type { Cache } from 'cache-manager';
+import { AuthGuard } from '../auth/auth.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @ApiTags('Catalog')
 @Controller('api')
@@ -86,7 +91,8 @@ export class CatalogApiController {
   @Get('products')
   async findAllProducts(
     @Query() query: PaginationQueryDto,
-    @Res({ passthrough: true }) response: Response,
+    @Res({ passthrough: true })
+    response: Response,
   ) {
     const cacheKey = `products:${query.page}:${query.limit}`;
 
@@ -153,7 +159,8 @@ export class CatalogApiController {
   @Get('products/:id/reviews/:reviewId')
   findProductReview(
     @Param('id', ParseIntPipe) id: number,
-    @Param('reviewId', ParseIntPipe) reviewId: number,
+    @Param('reviewId', ParseIntPipe)
+    reviewId: number,
   ) {
     return this.catalogService.findReviewForDessert(id, reviewId);
   }
@@ -193,8 +200,14 @@ export class CatalogApiController {
     description: 'Ошибка связанных данных',
     type: ErrorResponseDto,
   })
+  @ApiSecurity('supertokens')
   @Post('products')
-  createProduct(@Body() createDessertDto: CreateDessertDto) {
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  createProduct(
+    @Body()
+    createDessertDto: CreateDessertDto,
+  ) {
     return this.catalogService.createDessert(createDessertDto);
   }
 
@@ -217,10 +230,14 @@ export class CatalogApiController {
     description: 'Ошибка связанных данных',
     type: ErrorResponseDto,
   })
+  @ApiSecurity('supertokens')
   @Patch('products/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   updateProduct(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateDessertDto: UpdateDessertDto,
+    @Body()
+    updateDessertDto: UpdateDessertDto,
   ) {
     return this.catalogService.updateDessert(id, updateDessertDto);
   }
@@ -243,7 +260,10 @@ export class CatalogApiController {
     description: 'Конфликт связанных данных',
     type: ErrorResponseDto,
   })
+  @ApiSecurity('supertokens')
   @Delete('products/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteProduct(@Param('id', ParseIntPipe) id: number) {
     await this.catalogService.deleteDessert(id);
@@ -287,7 +307,8 @@ export class CatalogApiController {
   @Get('categories')
   async findAllCategories(
     @Query() query: PaginationQueryDto,
-    @Res({ passthrough: true }) response: Response,
+    @Res({ passthrough: true })
+    response: Response,
   ) {
     const result = await this.catalogService.findCategoriesPage(
       query.page,
@@ -343,7 +364,8 @@ export class CatalogApiController {
   @Get('categories/:id/products/:productId')
   findCategoryProduct(
     @Param('id', ParseIntPipe) id: number,
-    @Param('productId', ParseIntPipe) productId: number,
+    @Param('productId', ParseIntPipe)
+    productId: number,
   ) {
     return this.catalogService.findDessertInCategory(id, productId);
   }
@@ -383,8 +405,14 @@ export class CatalogApiController {
     description: 'Категория с таким названием уже существует',
     type: ErrorResponseDto,
   })
+  @ApiSecurity('supertokens')
   @Post('categories')
-  createCategory(@Body() createCategoryDto: CreateCategoryDto) {
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  createCategory(
+    @Body()
+    createCategoryDto: CreateCategoryDto,
+  ) {
     return this.catalogService.createCategory(createCategoryDto);
   }
 
@@ -407,10 +435,14 @@ export class CatalogApiController {
     description: 'Категория с таким названием уже существует',
     type: ErrorResponseDto,
   })
+  @ApiSecurity('supertokens')
   @Patch('categories/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   updateCategory(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateCategoryDto: UpdateCategoryDto,
+    @Body()
+    updateCategoryDto: UpdateCategoryDto,
   ) {
     return this.catalogService.updateCategory(id, updateCategoryDto);
   }
@@ -429,7 +461,10 @@ export class CatalogApiController {
     description: 'Категория не найдена',
     type: ErrorResponseDto,
   })
+  @ApiSecurity('supertokens')
   @Delete('categories/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteCategory(@Param('id', ParseIntPipe) id: number) {
     await this.catalogService.deleteCategory(id);

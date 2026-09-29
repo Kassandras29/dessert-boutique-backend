@@ -78,6 +78,20 @@ export class ReviewsService {
     });
   }
 
+  async findCustomerForAuthUser(authUserId: string) {
+    const customer = await this.prisma.customer.findUnique({
+      where: {
+        authUserId,
+      },
+    });
+
+    if (!customer) {
+      throw new NotFoundException('Клиент для текущего пользователя не найден');
+    }
+
+    return customer;
+  }
+
   async findAllDesserts() {
     return this.prisma.dessert.findMany({
       include: {
@@ -114,6 +128,18 @@ export class ReviewsService {
     return review;
   }
 
+  async createForAuthUser(
+    createReviewDto: CreateReviewDto,
+    authUserId: string,
+  ) {
+    const customer = await this.findCustomerForAuthUser(authUserId);
+
+    return this.create({
+      ...createReviewDto,
+      customerId: customer.id,
+    });
+  }
+
   async update(id: number, updateReviewDto: UpdateReviewDto) {
     this.validateRating(updateReviewDto.rating);
 
@@ -140,6 +166,19 @@ export class ReviewsService {
     });
 
     return review;
+  }
+
+  async updateForAuthUser(
+    id: number,
+    updateReviewDto: UpdateReviewDto,
+    authUserId: string,
+  ) {
+    const customer = await this.findCustomerForAuthUser(authUserId);
+
+    return this.update(id, {
+      ...updateReviewDto,
+      customerId: customer.id,
+    });
   }
 
   async remove(id: number) {

@@ -28,6 +28,43 @@ export class OrdersService {
     });
   }
 
+  async findAllForAuthUser(authUserId: string) {
+    return this.prisma.order.findMany({
+      where: {
+        customer: {
+          is: {
+            authUserId,
+          },
+        },
+      },
+      include: {
+        customer: true,
+        items: {
+          include: {
+            dessert: true,
+          },
+        },
+      },
+      orderBy: {
+        id: 'asc',
+      },
+    });
+  }
+
+  async findCustomerForAuthUser(authUserId: string) {
+    const customer = await this.prisma.customer.findUnique({
+      where: {
+        authUserId,
+      },
+    });
+
+    if (!customer) {
+      throw new NotFoundException('Клиент для текущего пользователя не найден');
+    }
+
+    return customer;
+  }
+
   async findAllPage(page: number, limit: number) {
     const skip = (page - 1) * limit;
 
@@ -55,6 +92,45 @@ export class OrdersService {
       items,
       total,
     };
+  }
+
+  async findAllPageForAuthUser(
+    authUserId: string,
+    page: number,
+    limit: number,
+  ) {
+    const skip = (page - 1) * limit;
+
+    const where = {
+      customer: {
+        is: {
+          authUserId,
+        },
+      },
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          customer: true,
+          items: {
+            include: {
+              dessert: true,
+            },
+          },
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      }),
+
+      this.prisma.order.count({ where }),
+    ]);
+
+    return { items, total };
   }
 
   async findOne(id: number) {
@@ -150,6 +226,15 @@ export class OrdersService {
           },
         },
       },
+    });
+  }
+
+  async createForAuthUser(createOrderDto: CreateOrderDto, authUserId: string) {
+    const customer = await this.findCustomerForAuthUser(authUserId);
+
+    return this.create({
+      ...createOrderDto,
+      customerId: customer.id,
     });
   }
 
